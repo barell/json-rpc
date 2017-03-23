@@ -4,6 +4,8 @@ namespace PhpRpc;
 
 use \PhpRpc\Server\IHandler;
 use \PhpRpc\Server\ICodec;
+use \PhpRpc\Server\Response;
+use \PhpRpc\Server\Exception\CodecException;
 
 class Server
 {
@@ -59,36 +61,37 @@ class Server
 
 	public function handle()
 	{
-		// here it will get incoming data from the handler
-		$data = $this->handler->getData();
 		$response = new Response();
-		// try decode it using codec
+
 		try {
+			$data = $this->handler->getData();
 			$request = $this->codec->decode($data);
 		} catch (CodecException $e) {
+			var_dump($e->getMessage());
+			exit;
 			// generate RPC error using the codec: Parse error -32700
-			$response = codec_generate_error(Methodnotfound)
+			//$response = codec_generate_error(Methodnotfound)
 		} catch (InvalidRequestException $e) {
 			// codec need to check if there is a method, parameters (jsonrpc:2.0, etc); Invalid Request -32600
-			$response = codec_generate_error(...)
+			//$response = codec_generate_error(...)
 		} catch (Exception $e) {
 			// Internal error? (-32603)
-			$response = codec_generate_error(...)
+			//$response = codec_generate_error(...)
 		}
 
 		foreach ($request->getCalls() as $call) {
-			$response->add? $this->execute($call);
+			//$response->add? $this->execute($call);
 		}
 
-		return $response;
+		//return $response;
 	}
 
 	private function execute($call) 
 	{
 		// check if method name exists
-		if (!$this->hasMethod($call->getMethod()) {
+		//if (!$this->hasMethod($call->getMethod()) {
 			// return method not found error Method not found -32601
-		}
+		//}
 		// check if parameters match
 		// if not return Invalid params -32602	
 

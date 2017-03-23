@@ -1,7 +1,17 @@
 <?php
 
-spl_autoload_register(function ($class_name) {
-    include $class_name . '.php';
+spl_autoload_register(function ($className) {
+
+	$parts = explode('\\', $className);
+
+	if ($parts[0] == 'PhpRpc') {
+		$parts[0] = 'src';
+    	$file = implode('/', $parts) . '.php';
+    	
+    	if (file_exists($file)) {
+    		require $file;
+    	}
+    }
 });
 
 class ExampleService
@@ -12,8 +22,12 @@ class ExampleService
 	}
 }
 
-$handler = new HttpPostHandler();
-$codec = new JsonCodec();
+use PhpRpc\Server\Handler\Http;
+use PhpRpc\Server\Codec\Json;
+use PhpRpc\Server;
+
+$handler = new Http();
+$codec = new Json();
 
 $server = new Server();
 
@@ -25,4 +39,4 @@ $server->addMethod('hello', array('ExampleService', 'hello'));
 $server->handle()->output();
 
 // or return details about all handler callbacks
-$server->reflector()->getDetails();
+//$server->reflector()->getDetails();
