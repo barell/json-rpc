@@ -11,32 +11,43 @@ class Response
     /**
      * @var string
      */
-	private $body;
+	private $content;
 
     /**
-     * @param $body
+     * Response constructor.
+     * @param string $content
+     */
+    public function __construct($content = '')
+    {
+        $this->setContent($content);
+    }
+
+    /**
+     * @param $content
      * @return $this
      */
-	public function setBody($body)
-	{
-		$this->body = $body;
+    public function setContent($content)
+    {
+        $this->content = $content;
 
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * @return string
      */
-	public function getBody()
-	{
-		return $this->body;
-	}
+    public function getContent()
+    {
+        return $this->content;
+    }
 
     /**
      * Outputs the request content
      */
 	public function output()
 	{
-		echo $this->body;
+	    header('Content-Type: application/json');
+
+		echo $this->content;
 	}
 }

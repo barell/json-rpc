@@ -1,10 +1,8 @@
 <?php
 
 spl_autoload_register(function ($className) {
-
 	$parts = explode('\\', $className);
-
-	if ($parts[0] == 'PhpRpc') {
+	if ($parts[0] == 'JsonRpcServer') {
 		$parts[0] = 'src';
     	$file = implode('/', $parts) . '.php';
     	
@@ -22,20 +20,11 @@ class ExampleService
 	}
 }
 
-use PhpRpc\Server\Handler\HttpHandler;
-use PhpRpc\Server\Codec\JsonCodec;
-use PhpRpc\AbstractServer;
+use JsonRpcServer\Server;
 
-$handler = new HttpHandler();
-$codec = new JsonCodec();
-
-$server = new AbstractServer();
-
-$server->setHandler($handler);
-$server->setCodec($codec);
+$server = Server::createDefault();
 
 $server->addMethod('hello', array('ExampleService', 'hello'));
-
 $server->handle()->output();
 
 // or return details about all handler callbacks
