@@ -22,14 +22,14 @@ class ExampleService
 	}
 }
 
-use PhpRpc\Server\Handler\Http;
-use PhpRpc\Server\Codec\Json;
-use PhpRpc\Server;
+use PhpRpc\Server\Handler\HttpHandler;
+use PhpRpc\Server\Codec\JsonCodec;
+use PhpRpc\AbstractServer;
 
-$handler = new Http();
-$codec = new Json();
+$handler = new HttpHandler();
+$codec = new JsonCodec();
 
-$server = new Server();
+$server = new AbstractServer();
 
 $server->setHandler($handler);
 $server->setCodec($codec);

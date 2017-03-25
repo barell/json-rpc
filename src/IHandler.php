@@ -1,6 +1,6 @@
 <?php
 
-namespace PhpRpc\Server;
+namespace JsonRpcServer;
 
 interface IHandler 
 {
