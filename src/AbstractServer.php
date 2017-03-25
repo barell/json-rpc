@@ -1,6 +1,8 @@
 <?php
 
 namespace JsonRpcServer;
+use JsonRpcServer\Exception\CodecException;
+use JsonRpcServer\Exception\JsonRpcServerException;
 
 /**
  * Class AbstractServer
@@ -102,11 +104,36 @@ abstract class AbstractServer
     /**
      * @return Response
      */
-	abstract public function handle();
+	public function handle()
+    {
+        try {
+            $data = $this->getHandler()->getData();
+            $decoded = $this->getCodec()->decode($data);
+
+            $request = new Request($decoded);
+            return $this->handleInternal($request);
+        } catch (CodecException $e) {
+            $this->handleCodecException($e);
+        }
+    }
 
     /**
-     * @param $call
+     * @param CodecException $e
+     * @throws JsonRpcServerException
+     */
+    protected function handleCodecException(CodecException $e)
+    {
+        throw new JsonRpcServerException(
+            'JsonRpcServer codec exception: ' . $e->getMessage(),
+            $e->getCode(),
+            $e->getFile(),
+            $e->getLine()
+        );
+    }
+
+    /**
+     * @param Request $request
      * @return mixed
      */
-	abstract protected function execute($call);
+	abstract protected function handleInternal(Request $request);
 }

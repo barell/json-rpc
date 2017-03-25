@@ -3,9 +3,9 @@
 namespace JsonRpcServer\Exception;
 
 /**
- * Class CodecException
+ * Class JsonRpcServerException
  * @package JsonRpcServer\Exception
  */
-class CodecException extends JsonRpcServerException
+class JsonRpcServerException extends \Exception
 {
 }

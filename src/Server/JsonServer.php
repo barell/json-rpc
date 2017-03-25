@@ -6,6 +6,8 @@ use JsonRpcServer\AbstractServer;
 use JsonRpcServer\Codec\JsonCodec;
 use JsonRpcServer\Exception\CodecException;
 use JsonRpcServer\Exception\InvalidRequestException;
+use JsonRpcServer\Request;
+use JsonRpcServer\Response;
 
 /**
  * Class JsonServer
@@ -16,7 +18,7 @@ class JsonServer extends AbstractServer
     const SERVER_VERSION = '2.0';
 
     const ERROR_PARSE = -32700;
-    const ERROR_INTERNAL = -32603
+    const ERROR_INTERNAL = -32603;
 
     /**
      * JsonServer constructor.
@@ -27,20 +29,11 @@ class JsonServer extends AbstractServer
         $this->setCodec($codec);
     }
 
-    public function handle()
+    protected function handleInternal(Request $request)
     {
-        try {
-            // maybe move handler and codec calls to abstract server and make handleInternal as abstract instead of overwrite
-            $data = $this->getHandler()->getData();
-            $request = $this->getCodec()->decode($data);
-        } catch (CodecException $e) {
-            return $this->generateError(self::ERROR_PARSE);
-        } catch (\Exception $e) {
-            return $this->generateError(, 'Internal Error');
-        }
-
-        //foreach ($request->getCalls() as $call) {
-            //$response->add? $this->execute($call);
+        $response = new Response();
+        foreach ($request->getCalls() as $call) {
+            $response->add? $this->execute($call);
         //}
 //    } catch (InvalidRequestException $e) {
 //return $this->generateError(-32600, 'Invalid Request');
