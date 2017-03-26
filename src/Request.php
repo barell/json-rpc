@@ -16,6 +16,11 @@ class Request
     private $calls;
 
     /**
+     * @var int
+     */
+    private $totalCalls;
+
+    /**
      * @var Validator
      */
     private $validator;
@@ -49,16 +54,29 @@ class Request
     }
 
     /**
+     * @return int
+     */
+    public function getTotalCalls()
+    {
+        return $this->totalCalls;
+    }
+
+    /**
      * @param array $data
      */
     private function process(array $data)
     {
         if (array_key_exists(0, $data)) {
             $this->calls = $data;
-        } else {
-            $this->calls = [
-                $data
-            ];
+            $this->totalCalls = count($this->calls);
+
+            return;
         }
+
+        $this->totalCalls = 1;
+        $this->calls = [
+            $data
+        ];
+
     }
 }

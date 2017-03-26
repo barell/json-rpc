@@ -6,6 +6,7 @@ use JsonRpcServer\Codec\JsonCodec;
 use JsonRpcServer\Exception\CodecException;
 use JsonRpcServer\Exception\InvalidRequestException;
 use JsonRpcServer\Exception\JsonRpcServerException;
+use JsonRpcServer\Exception\JsonRpcUserException;
 use JsonRpcServer\Handler\HttpHandler;
 use JsonRpcServer\Response\Builder;
 
@@ -153,7 +154,12 @@ class Server
             }
         }
 
-        $result = $responseBuilder->getRepliesCombined();
+        $build = Builder::SINGLE_BUILD;
+        if ($request->getTotalCalls() > 1) {
+            $build = Builder::MULTI_BUILD;
+        }
+
+        $result = $responseBuilder->getRepliesCombined($build);
         $encoded = $this->getCodec()->encode($result);
 
         return new Response($encoded);
@@ -161,14 +167,18 @@ class Server
 
     private function execute($call)
     {
+        // check if callback is callable
+        // get it's method parameters
+
         try {
             $someData = call_user_func($callback);
-        } catch (RpcUserError $e) {
+        } catch (JsonRpcUserException $e) {
             // generate error response using code and message from the exception
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // anything else put it here as internal server error (-32603)
         }
 
+        // if notification - don't return the reply (return null)
         return [];
     }
 
@@ -186,14 +196,57 @@ class Server
     /**
      * @param $result
      * @param null $id
-     * @return Response
+     * @return array
      */
-    private function getResultResponse($result, $id = null) {
-        $data = [
+    private function buildResultReply($result, $id = null) {
+        $reply = [
             'result' => $result
         ];
 
-        return $this->getResponse($data, $id);
+        return $this->buildReply($reply, $id);
+    }
+
+    /**
+     * @param $code
+     * @param null $message
+     * @param null $data
+     * @param null $id
+     * @return array
+     */
+    private function buildErrorReply($code, $message = null, $data = null, $id = null)
+    {
+        if ($message === null) {
+            $message = $this->getErrorMessage($code);
+        }
+
+        $reply = [
+            'code' => $code,
+            'message' => $message
+        ];
+
+        if ($reply !== null) {
+            $reply['data'] = $data;
+        }
+
+        return $reply;
+    }
+
+    /**
+     * @param $reply
+     * @param null $id
+     * @return array
+     */
+    private function buildReply($reply, $id = null)
+    {
+        if (!array_key_exists('jsonrpc', $reply)) {
+            $reply = ['jsonrpc' => self::JSON_RPC_VERSION] + $reply;
+        }
+
+        if (!array_key_exists('id', $reply)) {
+            $reply['id'] = $id;
+        }
+
+        return $reply;
     }
 
     /**
@@ -205,38 +258,9 @@ class Server
      */
     private function getErrorResponse($code, $message = null, $data = null, $id = null)
     {
-        if ($message === null) {
-            $message = $this->getErrorMessage($code);
-        }
-
-        $error = [
-            'code' => $code,
-            'message' => $message
-        ];
-
-        if ($data !== null) {
-            $error['data'] = $data;
-        }
-
-        return $this->getResponse($error, $id);
-    }
-
-    /**
-     * @param $data
-     * @param null $id
-     * @return Response
-     */
-    private function getResponse($data, $id = null)
-    {
-        if (!array_key_exists('jsonrpc', $data)) {
-            $data = ['jsonrpc' => self::JSON_RPC_VERSION] + $data;
-        }
-
-        if (!array_key_exists('id', $data)) {
-            $data['id'] = $id;
-        }
-
-        $encoded = $this->getCodec()->encode($data);
+        $errorReply = $this->buildErrorReply($code, $message, $data, $id);
+        $reply = $this->buildReply($errorReply, $id);
+        $encoded = $this->getCodec()->encode($reply);
 
         return new Response($encoded);
     }
