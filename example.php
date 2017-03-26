@@ -26,6 +26,3 @@ $server = Server::createDefault();
 
 $server->addMethod('hello', '\ExampleService');
 $server->handle()->output();
-
-// or return details about all handler callbacks
-//$server->reflector()->getDetails();
