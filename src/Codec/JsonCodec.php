@@ -15,20 +15,20 @@ class JsonCodec implements ICodec
      * @param $data
      * @return mixed
      */
-	public function decode($data)
-	{
-		$decoded = json_decode($data, true);
+    public function decode($data)
+    {
+        $decoded = json_decode($data, true);
 
-		$this->handleDecodeError();
+        $this->handleDecodeError();
 
-		return $decoded;
-	}
+        return $decoded;
+    }
 
     /**
      * @param $data
      * @return string
      */
-	public function encode($data)
+    public function encode($data)
     {
         $encoded = json_encode($data);
 
@@ -40,16 +40,16 @@ class JsonCodec implements ICodec
     /**
      * @throws CodecException
      */
-	private function handleDecodeError()
-	{
-		$message = 'Unknown error';
+    private function handleDecodeError()
+    {
+        $message = 'Unknown error';
 
-		switch(json_last_error()) {
-			case JSON_ERROR_NONE:
-				return;
-			break;
-		}
+        switch(json_last_error()) {
+            case JSON_ERROR_NONE:
+                return;
+                break;
+        }
 
-		throw new CodecException($message);
-	}
+        throw new CodecException($message);
+    }
 }

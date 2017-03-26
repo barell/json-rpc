@@ -13,8 +13,8 @@ class HttpHandler implements IHandler
     /**
      * @return bool|string
      */
-	public function getData()
-	{
-		return file_get_contents('php://input');
-	}
+    public function getData()
+    {
+        return file_get_contents('php://input');
+    }
 }

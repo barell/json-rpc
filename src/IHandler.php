@@ -2,7 +2,14 @@
 
 namespace JsonRpcServer;
 
-interface IHandler 
+/**
+ * Interface IHandler
+ * @package JsonRpcServer
+ */
+interface IHandler
 {
-	public function getData();
+    /**
+     * @return mixed
+     */
+    public function getData();
 }

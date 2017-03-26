@@ -11,7 +11,7 @@ class Response
     /**
      * @var string
      */
-	private $content;
+    private $content;
 
     /**
      * Response constructor.
@@ -44,10 +44,10 @@ class Response
     /**
      * Outputs the request content
      */
-	public function output()
-	{
-	    header('Content-Type: application/json');
+    public function output()
+    {
+        header('Content-Type: application/json');
 
-		echo $this->content;
-	}
+        echo $this->content;
+    }
 }
