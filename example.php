@@ -14,9 +14,9 @@ spl_autoload_register(function ($className) {
 
 class ExampleService
 {
-	public function hello()
+	public function hello($name)
 	{
-		return 'Hello world!';
+		return 'Hello ' . $name . '!';
 	}
 }
 
@@ -24,7 +24,7 @@ use JsonRpcServer\Server;
 
 $server = Server::createDefault();
 
-$server->addMethod('hello', array('ExampleService', 'hello'));
+$server->addMethod('hello', '\ExampleService');
 $server->handle()->output();
 
 // or return details about all handler callbacks

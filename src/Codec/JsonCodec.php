@@ -17,7 +17,7 @@ class JsonCodec implements ICodec
      */
 	public function decode($data)
 	{
-		$decoded = json_decode($data);
+		$decoded = json_decode($data, true);
 
 		$this->handleDecodeError();
 

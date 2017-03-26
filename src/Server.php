@@ -5,7 +5,6 @@ namespace JsonRpcServer;
 use JsonRpcServer\Codec\JsonCodec;
 use JsonRpcServer\Exception\CodecException;
 use JsonRpcServer\Exception\InvalidRequestException;
-use JsonRpcServer\Exception\JsonRpcServerException;
 use JsonRpcServer\Exception\JsonRpcUserException;
 use JsonRpcServer\Handler\HttpHandler;
 use JsonRpcServer\Response\Builder;
@@ -37,103 +36,110 @@ class Server
 
     const ERROR_PARSE = -32700;
     const ERROR_INVALID_REQUEST = -32600;
+    const ERROR_METHOD_NOT_FOUND = -32601;
+    const ERROR_INVALID_PARAMS = -32602;
     const ERROR_INTERNAL = -32603;
 
     /**
      * @var IHandler
      */
-	private $handler;
+    private $handler;
 
     /**
      * @var ICodec
      */
-	private $codec;
+    private $codec;
 
     /**
      * @var array
      */
-	private $methods;
+    private $methods;
 
     /**
      * @param ICodec $codec
      * @return $this
      */
-	public function setCodec(ICodec $codec)
-	{
-		$this->codec = $codec;
+    public function setCodec(ICodec $codec)
+    {
+        $this->codec = $codec;
 
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * @return ICodec
      */
-	public function getCodec()
-	{
-		return $this->codec;
-	}
+    public function getCodec()
+    {
+        return $this->codec;
+    }
 
     /**
      * @param IHandler $handler
      * @return $this
      */
-	public function setHandler(IHandler $handler)
-	{
-		$this->handler = $handler;
+    public function setHandler(IHandler $handler)
+    {
+        $this->handler = $handler;
 
-		return $this;
-	}
+        return $this;
+    }
 
     /**
      * @return IHandler
      */
-	public function getHandler()
-	{
-		return $this->handler;
-	}
+    public function getHandler()
+    {
+        return $this->handler;
+    }
 
     /**
      * @param $name
-     * @param $callback
+     * @param $class
+     * @param null $method
      * @return $this
      */
-	public function addMethod($name, $callback)
-	{
-		$this->methods[$name] = $callback;
+    public function addMethod($name, $class, $method = null)
+    {
+        if ($method === null) {
+            $method = $name;
+        }
 
-		return $this;
-	}
+        $this->methods[$name] = [$class, $method];
+
+        return $this;
+    }
 
     /**
      * @param $name
      * @return bool
      */
-	public function hasMethod($name) 
-	{
-		return array_key_exists($name, $this->methods);
-	}
+    public function hasMethod($name)
+    {
+        return array_key_exists($name, $this->methods);
+    }
 
     /**
      * @param $name
      * @return mixed
      */
-	public function getMethod($name) 
-	{
-		return $this->methods[$name];
-	}
+    public function getMethod($name)
+    {
+        return $this->methods[$name];
+    }
 
     /**
      * @return array
      */
-	public function getMethods()
-	{
-		return $this->methods;
-	}
+    public function getMethods()
+    {
+        return $this->methods;
+    }
 
     /**
      * @return Response
      */
-	public function handle()
+    public function handle()
     {
         try {
             $request = $this->buildRequest();
@@ -147,9 +153,10 @@ class Server
 
         $responseBuilder = new Builder();
         foreach ($request->getCalls() as $call) {
-            $reply = $this->execute($call);
+            $reply = $this->execute($call, $request);
 
             if ($reply !== null) {
+                $reply = $this->buildReply($reply);
                 $responseBuilder->addReply($reply);
             }
         }
@@ -165,21 +172,60 @@ class Server
         return new Response($encoded);
     }
 
-    private function execute($call)
+    /**
+     * @param $call
+     * @param Request $request
+     * @return array|null
+     */
+    private function execute($call, Request $request)
     {
-        // check if callback is callable
-        // get it's method parameters
+        $isNotification = true;
+        $callId = null;
 
-        try {
-            $someData = call_user_func($callback);
-        } catch (JsonRpcUserException $e) {
-            // generate error response using code and message from the exception
-        } catch (\Exception $e) {
-            // anything else put it here as internal server error (-32603)
+        if (array_key_exists('id', $call)) {
+            $isNotification = false;
+            $callId = $call['id'];
         }
 
-        // if notification - don't return the reply (return null)
-        return [];
+        try {
+            $request->getValidator()->validateCall($call);
+        } catch (InvalidRequestException $e) {
+            return $this->buildErrorReply(self::ERROR_INVALID_REQUEST, $callId);
+        }
+
+        $method = $call['method'];
+
+        if (!$this->hasMethod($method) || !is_callable($this->getMethod($method))) {
+            return $this->buildErrorReply(self::ERROR_METHOD_NOT_FOUND, $callId);
+        }
+
+        $callback = $this->getMethod($method);
+        $reflector = new \ReflectionMethod($callback[0], $callback[1]);
+        $params = array_key_exists('params', $call) ? $call['params'] : [];
+
+        foreach ($reflector->getParameters() as $parameter) {
+            if (!$parameter->isOptional() && !array_key_exists($parameter->getName(), $params)) {
+                return $this->buildErrorReply(
+                    self::ERROR_INVALID_PARAMS,
+                    $callId,
+                    sprintf('Parameter %s is required', $parameter->getName())
+                );
+            }
+        }
+
+        try {
+            $result = call_user_func_array($callback, $params);
+        } catch (JsonRpcUserException $e) {
+            return $this->buildErrorReply($e->getCode(), $callId, $e->getMessage());
+        } catch (\Exception $e) {
+            return $this->buildErrorReply(self::ERROR_INTERNAL, $callId);
+        }
+
+        if ($isNotification) {
+            return null;
+        }
+
+        return $this->buildResultReply($result, $callId);
     }
 
     /**
@@ -198,22 +244,24 @@ class Server
      * @param null $id
      * @return array
      */
-    private function buildResultReply($result, $id = null) {
+    private function buildResultReply($result, $id = null)
+    {
         $reply = [
-            'result' => $result
+            'result' => $result,
+            'id' => $id
         ];
 
-        return $this->buildReply($reply, $id);
+        return $reply;
     }
 
     /**
      * @param $code
+     * @param null $id
      * @param null $message
      * @param null $data
-     * @param null $id
      * @return array
      */
-    private function buildErrorReply($code, $message = null, $data = null, $id = null)
+    private function buildErrorReply($code, $id = null, $message = null, $data = null)
     {
         if ($message === null) {
             $message = $this->getErrorMessage($code);
@@ -224,9 +272,11 @@ class Server
             'message' => $message
         ];
 
-        if ($reply !== null) {
+        if ($data !== null) {
             $reply['data'] = $data;
         }
+
+        $reply['id'] = $id;
 
         return $reply;
     }
@@ -258,7 +308,7 @@ class Server
      */
     private function getErrorResponse($code, $message = null, $data = null, $id = null)
     {
-        $errorReply = $this->buildErrorReply($code, $message, $data, $id);
+        $errorReply = $this->buildErrorReply($code, $id, $message, $data);
         $reply = $this->buildReply($errorReply, $id);
         $encoded = $this->getCodec()->encode($reply);
 
@@ -273,13 +323,17 @@ class Server
     {
         switch ($code) {
             case self::ERROR_PARSE:
-                return 'Parse Error';
+                return 'Parse error';
             case self::ERROR_INVALID_REQUEST:
-                return 'Invalid Request';
+                return 'Invalid request';
+            case self::ERROR_METHOD_NOT_FOUND:
+                return 'Method not found';
+            case self::ERROR_INVALID_PARAMS:
+                return 'Invalid params';
             case self::ERROR_INTERNAL:
-                return 'Internal Error';
+                return 'Internal error';
         }
 
-        return 'Unknown Error';
+        return 'Unknown error';
     }
 }
