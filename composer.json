@@ -1,0 +1,21 @@
+{
+    "name": "barell/json-rpc-server",
+    "description": "JSON-RPC 2.0 Server",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bartosz Tomczak",
+            "email": "bosslog@gmail.com"
+        }
+    ],
+    "require": {},
+    "require-dev": {
+        "phpunit/phpunit": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "JsonRpcServer\\": "src/",
+            "JsonRpcServerTest\\": "tests"
+        }
+    }
+}

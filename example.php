@@ -1,28 +1,11 @@
 <?php
 
-spl_autoload_register(function ($className) {
-    $parts = explode('\\', $className);
-    if ($parts[0] == 'JsonRpcServer') {
-        $parts[0] = 'src';
-        $file = implode('/', $parts) . '.php';
-
-        if (file_exists($file)) {
-            require $file;
-        }
-    }
-});
-
-class ExampleService
-{
-    public function hello($name)
-    {
-        return 'Hello ' . $name . '!';
-    }
-}
+require 'vendor/autoload.php';
 
 use JsonRpcServer\Server;
 
 $server = Server::createDefault();
 
-$server->addMethod('hello', '\ExampleService');
+$server->addMethod('hello', 'JsonRpcServerTest\\Mocks\\TestService');
+$server->addMethod('hello.second', 'JsonRpcServerTest\\Mocks\\TestService', 'hello');
 $server->handle()->output();
