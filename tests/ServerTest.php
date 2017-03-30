@@ -194,13 +194,4 @@ class ServerTest extends TestCase
 
         $this->assertEquals('{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}', $response);
     }
-
-    public function testMissingMethodName()
-    {
-        $data = '{"jsonrpc":"2.0","params":{"arg":"test"},"id":null}';
-        $server = $this->getServer($data);
-        $response = $server->handle()->getContent();
-
-        $this->assertEquals('{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}', $response);
-    }
 }

@@ -4,15 +4,18 @@ Welcome to JSON-RPC Server library written in PHP and fully supporting the
 JSON-RPC 2.0 specification. It can work with incoming connections over HTTP using POST method but 
 can be easily extended to read from any input.
 
-Current version: **No release yet** 
+Current version: **0.9.0** 
 
-Release date: **No release yet**
+Release date: **2017-03-30**
 
 License: **MIT**
 
 ## Installation
 
-Coming soon
+To start using in your project, run composer command:
+```
+composer require barell/json-rpc-server
+```
 
 ## Basic Usage
 
