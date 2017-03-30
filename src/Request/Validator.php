@@ -28,6 +28,10 @@ class Validator
      */
     public function validateCall($call)
     {
+        if (!is_array($call)) {
+            throw new InvalidRequestException('A single call request must be an array');
+        }
+
         if (!array_key_exists('jsonrpc', $call) || $call['jsonrpc'] !== Server::JSON_RPC_VERSION) {
             throw new InvalidRequestException('JSON-RPC version key is missing or does not match the server');
         }

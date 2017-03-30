@@ -167,7 +167,11 @@ class Server
         }
 
         $result = $responseBuilder->getRepliesCombined($build);
-        $encoded = $this->getCodec()->encode($result);
+        $encoded = '';
+
+        if (!empty($result)) {
+            $encoded = $this->getCodec()->encode($result);
+        }
 
         return new Response($encoded);
     }
@@ -182,7 +186,7 @@ class Server
         $isNotification = true;
         $callId = null;
 
-        if (array_key_exists('id', $call)) {
+        if (is_array($call) && array_key_exists('id', $call)) {
             $isNotification = false;
             $callId = $call['id'];
         }
