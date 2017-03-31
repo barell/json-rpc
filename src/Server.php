@@ -7,6 +7,7 @@ use JsonRpcServer\Exception\CodecException;
 use JsonRpcServer\Exception\InvalidRequestException;
 use JsonRpcServer\Exception\JsonRpcUserException;
 use JsonRpcServer\Handler\HttpHandler;
+use JsonRpcServer\Server\Call;
 use JsonRpcServer\Response\Builder;
 
 /**
@@ -177,27 +178,26 @@ class Server
     }
 
     /**
-     * @param $call
+     * @param $callData
      * @param Request $request
      * @return array|null
      */
-    private function execute($call, Request $request)
+    private function execute($callData, Request $request)
     {
-        $isNotification = true;
         $callId = null;
-
-        if (is_array($call) && array_key_exists('id', $call)) {
-            $isNotification = false;
-            $callId = $call['id'];
+        if (is_array($callData) && array_key_exists('id', $callData)) {
+            $callId = $callData['id'];
         }
 
         try {
-            $request->getValidator()->validateCall($call);
+            $request->getValidator()->validateCall($callData);
         } catch (InvalidRequestException $e) {
             return $this->buildErrorReply(self::ERROR_INVALID_REQUEST, $callId);
         }
 
-        $method = $call['method'];
+        $call = new Call($callData);
+        $method = $call->getMethod();
+        $params = $call->getParams();
 
         if (!$this->hasMethod($method) || !is_callable($this->getMethod($method))) {
             return $this->buildErrorReply(self::ERROR_METHOD_NOT_FOUND, $callId);
@@ -205,14 +205,23 @@ class Server
 
         $callback = $this->getMethod($method);
         $reflector = new \ReflectionMethod($callback[0], $callback[1]);
-        $params = array_key_exists('params', $call) ? $call['params'] : [];
 
-        foreach ($reflector->getParameters() as $parameter) {
-            if (!$parameter->isOptional() && !array_key_exists($parameter->getName(), $params)) {
+        if ($call->hasNamedParams()) {
+            foreach ($reflector->getParameters() as $parameter) {
+                if (!$parameter->isOptional() && !array_key_exists($parameter->getName(), $params)) {
+                    return $this->buildErrorReply(
+                        self::ERROR_INVALID_PARAMS,
+                        $callId,
+                        sprintf('Parameter %s is required', $parameter->getName())
+                    );
+                }
+            }
+        } else {
+            if ($reflector->getNumberOfRequiredParameters() > count($params)) {
                 return $this->buildErrorReply(
                     self::ERROR_INVALID_PARAMS,
                     $callId,
-                    sprintf('Parameter %s is required', $parameter->getName())
+                    'Missing parameters'
                 );
             }
         }
@@ -225,7 +234,7 @@ class Server
             return $this->buildErrorReply(self::ERROR_INTERNAL, $callId);
         }
 
-        if ($isNotification) {
+        if ($call->getType() == Call::TYPE_NOTIFICATION) {
             return null;
         }
 
