@@ -14,6 +14,16 @@ class Response
     private $content;
 
     /**
+     * @var array
+     */
+    private $headers = [];
+
+    /**
+     * @var bool
+     */
+    private $headersSent = false;
+
+    /**
      * Response constructor.
      * @param string $content
      */
@@ -42,11 +52,55 @@ class Response
     }
 
     /**
+     * @param $name
+     * @param null $value
+     * @return $this
+     */
+    public function addHeader($name, $value = null)
+    {
+        if ($value === null) {
+            $this->headers[] = $name;
+        } else {
+            $this->headers[$name] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders()
+    {
+        return $this->headers;
+    }
+
+    /**
+     * @return $this
+     */
+    public function sendHeaders()
+    {
+        if (!$this->headersSent) {
+            foreach ($this->headers as $key => $value) {
+                if (is_string($key)) {
+                    header($key . ': ' . $value);
+                } else {
+                    header($value);
+                }
+            }
+
+            $this->headersSent = true;
+        }
+
+        return $this;
+    }
+
+    /**
      * Outputs the request content
      */
     public function output()
     {
-        header('Content-Type: application/json');
+        $this->sendHeaders();
 
         echo $this->content;
     }

@@ -30,11 +30,7 @@ class JsonCodec implements ICodec
      */
     public function encode($data)
     {
-        $encoded = json_encode($data);
-
-        $this->handleDecodeError();
-
-        return $encoded;
+        return json_encode($data);
     }
 
     /**

@@ -149,7 +149,7 @@ class Server
         } catch (InvalidRequestException $e) {
             return $this->getErrorResponse(self::ERROR_INVALID_REQUEST);
         } catch (\Exception $e) {
-            return $this->getErrorResponse(self::ERROR_INTERNAL);
+            return $this->getErrorResponse(self::ERROR_INTERNAL, $e->getMessage().' in '.$e->getFile().':'.$e->getLine());
         }
 
         $responseBuilder = new Builder();
@@ -174,7 +174,7 @@ class Server
             $encoded = $this->getCodec()->encode($result);
         }
 
-        return new Response($encoded);
+        return $this->buildResponse($encoded);
     }
 
     /**
@@ -231,7 +231,7 @@ class Server
         } catch (JsonRpcUserException $e) {
             return $this->buildErrorReply($e->getCode(), $callId, $e->getMessage());
         } catch (\Exception $e) {
-            return $this->buildErrorReply(self::ERROR_INTERNAL, $callId);
+            return $this->buildErrorReply(self::ERROR_INTERNAL, $callId, $e->getMessage().' in '.$e->getFile().':'.$e->getLine());
         }
 
         if ($call->getType() == Call::TYPE_NOTIFICATION) {
@@ -239,6 +239,18 @@ class Server
         }
 
         return $this->buildResultReply($result, $callId);
+    }
+
+    /**
+     * @param $content
+     * @return Response
+     */
+    private function buildResponse($content)
+    {
+        $response = new Response($content);
+        $response->addHeader('Content-Type', 'application/json');
+
+        return $response;
     }
 
     /**
@@ -259,12 +271,10 @@ class Server
      */
     private function buildResultReply($result, $id = null)
     {
-        $reply = [
+        return [
             'result' => $result,
             'id' => $id
         ];
-
-        return $reply;
     }
 
     /**
@@ -325,7 +335,7 @@ class Server
         $reply = $this->buildReply($errorReply, $id);
         $encoded = $this->getCodec()->encode($reply);
 
-        return new Response($encoded);
+        return $this->buildResponse($encoded);
     }
 
     /**
