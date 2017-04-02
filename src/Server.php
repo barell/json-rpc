@@ -149,7 +149,7 @@ class Server
         } catch (InvalidRequestException $e) {
             return $this->getErrorResponse(self::ERROR_INVALID_REQUEST);
         } catch (\Exception $e) {
-            return $this->getErrorResponse(self::ERROR_INTERNAL, $e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+            return $this->getErrorResponse(self::ERROR_INTERNAL);
         }
 
         $responseBuilder = new Builder();
@@ -231,7 +231,7 @@ class Server
         } catch (JsonRpcUserException $e) {
             return $this->buildErrorReply($e->getCode(), $callId, $e->getMessage());
         } catch (\Exception $e) {
-            return $this->buildErrorReply(self::ERROR_INTERNAL, $callId, $e->getMessage().' in '.$e->getFile().':'.$e->getLine());
+            return $this->buildErrorReply(self::ERROR_INTERNAL, $callId);
         }
 
         if ($call->getType() == Call::TYPE_NOTIFICATION) {
