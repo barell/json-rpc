@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/barell/json-rpc-server.svg?branch=master)](https://travis-ci.org/barell/json-rpc-server)
+
 # JSON-RPC Server
 
 Welcome to JSON-RPC Server library written in PHP and fully supporting the
