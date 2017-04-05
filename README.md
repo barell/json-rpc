@@ -76,7 +76,7 @@ class ExampleService
     public function divide($a, $b)
     {
         if ($b == 0) {
-            throw JsonRpcUserException('Division by zero is not allowed', 1234);
+            throw new JsonRpcUserException('Division by zero is not allowed', 1234);
         }
         
         return $a / $b;
