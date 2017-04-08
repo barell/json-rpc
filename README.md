@@ -6,9 +6,9 @@ Welcome to JSON-RPC Server library written in PHP and fully supporting the
 [JSON-RPC 2.0 specification](http://www.jsonrpc.org/specification). It can work with incoming connections over HTTP using POST method but 
 can be easily extended to read from any input.
 
-Current version: **1.0.0** 
+Current version: **1.0.1** 
 
-Release date: **2017-04-02**
+Release date: **2017-04-08**
 
 License: **MIT**
 
