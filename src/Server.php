@@ -54,7 +54,7 @@ class Server
     /**
      * @var array
      */
-    private $methods;
+    private $methods = [];
 
     /**
      * @param ICodec $codec
