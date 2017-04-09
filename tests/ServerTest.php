@@ -20,6 +20,7 @@ class ServerTest extends TestCase
         $server->addMethod('helloPerson', '\\JsonRpcServerTest\\Mocks\\TestService');
         $server->addMethod('something', '\\JsonRpcServerTest\\Mocks\\TestService');
         $server->addMethod('notify', '\\JsonRpcServerTest\\Mocks\\TestService');
+        $server->addMethod('namedParams', '\\JsonRpcServerTest\\Mocks\\TestService');
 
         return $server;
     }
@@ -28,7 +29,7 @@ class ServerTest extends TestCase
     {
         $server = $this->getServer('');
 
-        $this->assertEquals(5, count($server->getMethods()));
+        $this->assertEquals(6, count($server->getMethods()));
 
         $this->assertEquals(true, $server->hasMethod('hello'));
         $this->assertEquals(true, $server->hasMethod('hello.second'));
@@ -81,7 +82,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('{"jsonrpc":"2.0","result":[2,4],"id":null}', $response);
+        $this->assertEquals('{"jsonrpc":"2.0","result":[2,4,"test"],"id":null}', $response);
     }
 
     public function testParameterAllValues()
@@ -190,5 +191,50 @@ class ServerTest extends TestCase
         $response = $server->handle()->getContent();
 
         $this->assertEquals('{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}', $response);
+    }
+
+    public function testNamedParamsDefaults()
+    {
+        $data = '{"jsonrpc":"2.0","method":"namedParams","id":null}';
+        $server = $this->getServer($data);
+        $response = $server->handle()->getContent();
+
+        $this->assertEquals('{"jsonrpc":"2.0","result":{"a":"a","b":"b"},"id":null}', $response);
+    }
+
+    public function testNamedParamsFirstOnly()
+    {
+        $data = '{"jsonrpc":"2.0","method":"namedParams","params":{"a": "x"},"id":null}';
+        $server = $this->getServer($data);
+        $response = $server->handle()->getContent();
+
+        $this->assertEquals('{"jsonrpc":"2.0","result":{"a":"x","b":"b"},"id":null}', $response);
+    }
+
+    public function testNamedParamsSecondOnly()
+    {
+        $data = '{"jsonrpc":"2.0","method":"namedParams","params":{"b": "y"},"id":null}';
+        $server = $this->getServer($data);
+        $response = $server->handle()->getContent();
+
+        $this->assertEquals('{"jsonrpc":"2.0","result":{"a":"a","b":"y"},"id":null}', $response);
+    }
+
+    public function testNamedParamsFirstIndexed()
+    {
+        $data = '{"jsonrpc":"2.0","method":"namedParams","params":["x"],"id":null}';
+        $server = $this->getServer($data);
+        $response = $server->handle()->getContent();
+
+        $this->assertEquals('{"jsonrpc":"2.0","result":{"a":"x","b":"b"},"id":null}', $response);
+    }
+
+    public function testNamedParamsBothIndexed()
+    {
+        $data = '{"jsonrpc":"2.0","method":"namedParams","params":["x", "y"],"id":null}';
+        $server = $this->getServer($data);
+        $response = $server->handle()->getContent();
+
+        $this->assertEquals('{"jsonrpc":"2.0","result":{"a":"x","b":"y"},"id":null}', $response);
     }
 }

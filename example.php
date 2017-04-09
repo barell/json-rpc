@@ -8,5 +8,6 @@ $server = Server::createDefault();
 
 $server->addMethod('hello', '\\JsonRpcServerTest\\Mocks\\TestService');
 $server->addMethod('hello.person', '\\JsonRpcServerTest\\Mocks\\TestService', 'helloPerson');
+$server->addMethod('namedParams', '\\JsonRpcServerTest\\Mocks\\TestService');
 
 $server->handle()->output();

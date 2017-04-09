@@ -23,4 +23,12 @@ class TestService
     {
 
     }
+
+    public function namedParams($a = 'a', $b = 'b')
+    {
+        return [
+            'a' => $a,
+            'b' => $b
+        ];
+    }
 }

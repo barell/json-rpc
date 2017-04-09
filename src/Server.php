@@ -249,6 +249,8 @@ class Server
         $reflector = new \ReflectionMethod($callback[0], $callback[1]);
 
         if ($call->hasNamedParams()) {
+            $positionedParams = [];
+
             foreach ($reflector->getParameters() as $parameter) {
                 if (!$parameter->isOptional() && !array_key_exists($parameter->getName(), $params)) {
                     return $this->buildErrorReply(
@@ -257,7 +259,16 @@ class Server
                         sprintf('Parameter %s is required', $parameter->getName())
                     );
                 }
+
+                if (array_key_exists($parameter->getName(), $params)) {
+                    $positionedParams[] = $params[$parameter->getName()];
+                } else {
+                    $positionedParams[] = $parameter->getDefaultValue();
+                }
             }
+
+            $params = $positionedParams;
+
         } else {
             if ($reflector->getNumberOfRequiredParameters() > count($params)) {
                 return $this->buildErrorReply(
