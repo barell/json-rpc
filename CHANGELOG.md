@@ -24,6 +24,6 @@ Up to date.
 Initial stable release.
 
 [Unreleased]: https://github.com/barell/json-rpc-server/archive/dev.zip
-[1.1.0]: https://github.com/barell/json-rpc-server/releases/tag/v1.0.2
+[1.0.2]: https://github.com/barell/json-rpc-server/releases/tag/v1.0.2
 [1.0.1]: https://github.com/barell/json-rpc-server/releases/tag/v1.0.1
 [1.0.0]: https://github.com/barell/json-rpc-server/releases/tag/v1.0.0
