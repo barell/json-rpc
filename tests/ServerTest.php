@@ -2,30 +2,24 @@
 
 namespace JsonRpcServerTest;
 
-use JsonRpcServer\Codec\JsonCodec;
 use JsonRpcServer\Server;
 use JsonRpcServerTest\Mocks\Handler;
-use JsonRpcServerTest\Mocks\TestService;
 use PHPUnit\Framework\TestCase;
 
 class ServerTest extends TestCase
 {
     private function getServer($data)
     {
-        $testService = new TestService();
-
-        $codec = new JsonCodec();
         $handler = new Handler($data);
 
-        $server = new Server();
-        $server->setCodec($codec);
+        $server = Server::createDefault();
         $server->setHandler($handler);
 
-        $server->addMethod('hello', $testService);
-        $server->addMethod('hello.second', $testService, 'hello');
-        $server->addMethod('helloPerson', $testService);
-        $server->addMethod('something', $testService);
-        $server->addMethod('notify', $testService);
+        $server->addMethod('hello', '\\JsonRpcServerTest\\Mocks\\TestService');
+        $server->addMethod('hello.second', '\\JsonRpcServerTest\\Mocks\\TestService', 'hello');
+        $server->addMethod('helloPerson', '\\JsonRpcServerTest\\Mocks\\TestService');
+        $server->addMethod('something', '\\JsonRpcServerTest\\Mocks\\TestService');
+        $server->addMethod('notify', '\\JsonRpcServerTest\\Mocks\\TestService');
 
         return $server;
     }

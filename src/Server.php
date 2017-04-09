@@ -9,6 +9,7 @@ use JsonRpcServer\Exception\JsonRpcUserException;
 use JsonRpcServer\Handler\HttpHandler;
 use JsonRpcServer\Server\Call;
 use JsonRpcServer\Response\Builder;
+use JsonRpcServer\ServiceProvider\DefaultProvider;
 
 /**
  * Class Server
@@ -25,10 +26,12 @@ class Server
     {
         $codec = new JsonCodec();
         $handler = new HttpHandler();
+        $serviceProvider = new DefaultProvider();
 
         $server = new self();
         $server->setCodec($codec);
         $server->setHandler($handler);
+        $server->setServiceProvider($serviceProvider);
 
         return $server;
     }
@@ -50,6 +53,11 @@ class Server
      * @var ICodec
      */
     private $codec;
+
+    /**
+     * @var IServiceProvider
+     */
+    private $serviceProvider;
 
     /**
      * @var array
@@ -95,6 +103,25 @@ class Server
     }
 
     /**
+     * @param IServiceProvider $serviceProvider
+     * @return $this
+     */
+    public function setServiceProvider(IServiceProvider $serviceProvider)
+    {
+        $this->serviceProvider = $serviceProvider;
+
+        return $this;
+    }
+
+    /**
+     * @return IServiceProvider
+     */
+    public function getServiceProvider()
+    {
+        return $this->serviceProvider;
+    }
+
+    /**
      * @param $name
      * @param $class
      * @param null $method
@@ -127,6 +154,21 @@ class Server
     public function getMethod($name)
     {
         return $this->methods[$name];
+    }
+
+    /**
+     * @param $name
+     * @return mixed
+     */
+    public function getResolvedMethod($name)
+    {
+        $method = $this->getMethod($name);
+
+        if (!is_object($method[0])) {
+            $method[0] = $this->getServiceProvider()->getServiceObject($method[0]);
+        }
+
+        return $method;
     }
 
     /**
@@ -203,7 +245,7 @@ class Server
             return $this->buildErrorReply(self::ERROR_METHOD_NOT_FOUND, $callId);
         }
 
-        $callback = $this->getMethod($method);
+        $callback = $this->getResolvedMethod($method);
         $reflector = new \ReflectionMethod($callback[0], $callback[1]);
 
         if ($call->hasNamedParams()) {
