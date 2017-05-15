@@ -241,11 +241,15 @@ class Server
         $method = $call->getMethod();
         $params = $call->getParams();
 
-        if (!$this->hasMethod($method) || !is_callable($this->getMethod($method))) {
+        if (!$this->hasMethod($method)) {
             return $this->buildErrorReply(self::ERROR_METHOD_NOT_FOUND, $callId);
         }
 
         $callback = $this->getResolvedMethod($method);
+        if (!is_callable($callback)) {
+            return $this->buildErrorReply(self::ERROR_METHOD_NOT_FOUND, $callId);
+        }
+
         $reflector = new \ReflectionMethod($callback[0], $callback[1]);
 
         if ($call->hasNamedParams()) {
