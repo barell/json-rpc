@@ -348,8 +348,10 @@ class Server
         }
 
         $reply = [
-            'code' => $code,
-            'message' => $message
+            'error' => [
+                'code' => $code,
+                'message' => $message
+            ]
         ];
 
         if ($data !== null) {

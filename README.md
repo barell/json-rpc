@@ -2,13 +2,13 @@
 
 # JSON-RPC Server
 
-Welcome to JSON-RPC Server library written in PHP 5.5 and higher and fully supporting the
+Welcome to JSON-RPC Server library written in PHP, compatible with version 5.5 and higher and fully supporting the
 [JSON-RPC 2.0 specification](http://www.jsonrpc.org/specification). It can work with incoming connections over HTTP using POST method but 
 can be easily extended to read from any input.
 
-Current version: **1.0.3** 
+Current version: **1.0.4** 
 
-Release date: **2017-05-15**
+Release date: **2017-05-17**
 
 License: **MIT**
 
@@ -39,6 +39,9 @@ $server = Server::createDefault();
 
 // Add hello method from ExampleService class
 $server->addMethod('hello', 'ExampleService');
+
+// Alternatively add get method from UserService class but expose it as getUser
+$server->addMethod('getUser', 'UserService', 'get');
 
 // Finally handle and output the result
 $server->handle()->output();
@@ -143,8 +146,10 @@ Whenever zero will be passed as the second parameter, the server output will be:
 ```json
 {
   "jsonrpc": "2.0",
-  "code": 1234,
-  "message": "Division by zero is not allowed",
+  "error": {
+    "code": 1234,
+    "message": "Division by zero is not allowed"
+  },
   "id": null
 }
 ```

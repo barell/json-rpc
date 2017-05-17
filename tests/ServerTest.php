@@ -46,7 +46,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('{"jsonrpc":"2.0","code":-32700,"message":"Parse error","id":null}', $response);
+        $this->assertEquals('{"jsonrpc":"2.0","error":{"code":-32700,"message":"Parse error"},"id":null}', $response);
     }
 
     public function testMethodNotFound()
@@ -55,7 +55,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('{"jsonrpc":"2.0","code":-32601,"message":"Method not found","id":null}', $response);
+        $this->assertEquals('{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":null}', $response);
     }
 
     public function testMissingParameter()
@@ -64,7 +64,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('{"jsonrpc":"2.0","code":-32602,"message":"Parameter name is required","id":null}', $response);
+        $this->assertEquals('{"jsonrpc":"2.0","error":{"code":-32602,"message":"Parameter name is required"},"id":null}', $response);
     }
 
     public function testSubName()
@@ -118,7 +118,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}', $response);
+        $this->assertEquals('{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":null}', $response);
     }
 
     public function testBatch()
@@ -139,22 +139,22 @@ class ServerTest extends TestCase
         $this->assertEquals('[{"jsonrpc":"2.0","result":"Hello World","id":123}]', $response);
     }
 
-    public function testBatchWithWithInvalid()
+    public function testBatchWithInvalid()
     {
         $data = '[{"jsonrpc":"2.0","method":"hello","id":123},{"test":"abc"}]';
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('[{"jsonrpc":"2.0","result":"Hello World","id":123},{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}]', $response);
+        $this->assertEquals('[{"jsonrpc":"2.0","result":"Hello World","id":123},{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":null}]', $response);
     }
 
-    public function testBatchWithWithMethodNotFound()
+    public function testBatchWithMethodNotFound()
     {
         $data = '[{"jsonrpc":"2.0","method":"hello","id":123},{"jsonrpc":"2.0","method":"abcd","id":null}]';
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('[{"jsonrpc":"2.0","result":"Hello World","id":123},{"jsonrpc":"2.0","code":-32601,"message":"Method not found","id":null}]', $response);
+        $this->assertEquals('[{"jsonrpc":"2.0","result":"Hello World","id":123},{"jsonrpc":"2.0","error":{"code":-32601,"message":"Method not found"},"id":null}]', $response);
     }
 
     public function testBatchAllNotifications()
@@ -172,7 +172,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('[{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null},{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}]', $response);
+        $this->assertEquals('[{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":null},{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":null}]', $response);
     }
 
     public function testWrongSpecVersion()
@@ -181,7 +181,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}', $response);
+        $this->assertEquals('{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":null}', $response);
     }
 
     public function testMissingMethodName()
@@ -190,7 +190,7 @@ class ServerTest extends TestCase
         $server = $this->getServer($data);
         $response = $server->handle()->getContent();
 
-        $this->assertEquals('{"jsonrpc":"2.0","code":-32600,"message":"Invalid request","id":null}', $response);
+        $this->assertEquals('{"jsonrpc":"2.0","error":{"code":-32600,"message":"Invalid request"},"id":null}', $response);
     }
 
     public function testNamedParamsDefaults()
